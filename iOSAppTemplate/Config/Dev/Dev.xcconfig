@@ -10,3 +10,7 @@
 // App Configuration
 BUNDLE_ID = com.konotori.iosapptemplate.dev
 APP_NAME = iOSAppTemplate-Dev
+
+// Compile-time diagnostics (Dev only): warn on slow-to-compile code.
+// Tune the millisecond thresholds as the codebase grows (e.g. 500 to reduce noise).
+OTHER_SWIFT_FLAGS = -Xfrontend -warn-long-function-bodies=150 -Xfrontend -warn-long-expression-type-checking=150
