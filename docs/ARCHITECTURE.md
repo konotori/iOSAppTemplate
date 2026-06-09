@@ -1,37 +1,59 @@
 # Architecture
 
-Repo này dùng Clean Architecture theo hướng tối giản, ưu tiên dễ hiểu nhưng vẫn tách bạch rõ ràng.
+This template follows a pragmatic **Clean Architecture** — minimal ceremony, but with clear separation of concerns and a strict one-way dependency rule.
 
-## Nguyên tắc chính
+## Layers
 
-- Domain không phụ thuộc layer khác.
-- Data phụ thuộc Domain, không phụ thuộc Presentation.
-- Presentation chỉ phụ thuộc Domain (qua UseCase/Protocols).
-- App là composition root, nơi wire dependency và khởi tạo flow.
+| Layer | Responsibility | Depends on |
+|---|---|---|
+| **App** | Composition root: `@main` entry, `AppDelegate`, DI container. Wires everything and starts the first flow. | everything |
+| **Presentation** | SwiftUI views, navigation, view state. | Domain, Foundation |
+| **Domain** | Pure business logic: models, use cases, repository protocols. **No framework imports.** | nothing |
+| **Data** | Implementations of the Domain protocols: API services, DTOs, database, mappers. | Domain, Foundation |
+| **Foundation** | Shared, stateless helpers and extensions used across layers. | — |
 
-## Dependency Rule (một chiều)
+## Dependency Rule (one-way)
 
 ```
-Presentation -> Domain <- Data
+Presentation ──▶ Domain ◀── Data
+        │                     │
+        └──────▶ Foundation ◀─┘
 ```
 
-## Luồng dữ liệu điển hình
+- **Domain** is the center and depends on nothing.
+- **Data** depends on Domain (it implements Domain's protocols), never on Presentation.
+- **Presentation** depends only on Domain (via use cases / protocols) and Foundation.
+- **App** is the only place that knows about concrete implementations.
 
-1. UI gọi UseCase (Domain).
-2. UseCase gọi Repository Protocol (Domain).
-3. Repository Impl (Data) thực thi, dùng Network/Database.
-4. Mapper chuyển đổi DTO/Entity -> Domain Model.
-5. Trả dữ liệu về UI.
+This keeps business rules testable in isolation and lets you swap any implementation (network, database, UI) without touching the others.
 
-## DI (Dependency Injection)
+## Typical Data Flow
 
-Base này dùng DI đơn giản để wire dependencies ở tầng `App`. Nếu dependency trở nên nhiều hoặc có trạng thái phức tạp, hãy tham khảo thư viện Factory của hmlongco:
+1. A SwiftUI screen calls a **Use Case** (Domain).
+2. The use case calls a **Repository protocol** (Domain).
+3. A **Repository implementation** (Data) executes it via network/database.
+4. A **Mapper** (Data) converts the DTO/entity into a Domain model.
+5. The Domain model flows back to the screen.
 
-[https://github.com/hmlongco/Factory](https://github.com/hmlongco/Factory)
+A full worked example is in [SAMPLE_FEATURE.md](SAMPLE_FEATURE.md).
 
-## Tư duy module hóa
+## Dependency Injection
 
-Hiện tại repo dùng cấu trúc theo layer. Khi mở rộng theo feature (hybrid slicing), mỗi feature có thể tự chứa đủ 3 layer:
+Dependencies are wired in the **App** layer (`App/AppContainer.swift`) using simple constructor injection. When the graph grows or gains complex lifetimes, consider a dedicated container such as [Factory](https://github.com/hmlongco/Factory) or [swift-dependencies](https://github.com/pointfreeco/swift-dependencies).
+
+## Bundled Packages
+
+Three focused, zero-dependency Swift packages are resolved via SPM (not vendored locally), so they can be reused across projects and version-bumped independently:
+
+| Package | Role |
+|---|---|
+| **[RESTKit](https://github.com/konotori/RESTKit)** | Networking: an `Endpoint` declares its response type, so requesting the wrong type is a compile error. Fully `Sendable`. |
+| **[NaviStack](https://github.com/konotori/NaviStack)** | Navigation: centralized, type-safe SwiftUI router with a two-phase interceptor pipeline. |
+| **[LogPipe](https://github.com/konotori/LogPipe)** | Logging: one API for every layer, structured events, per-destination levels, redaction. |
+
+## Scaling Up: Feature Modules
+
+The default layout slices by **layer**. As the app grows you can move to **feature slicing**, where each feature owns its own layers:
 
 ```
 Features/
@@ -41,46 +63,9 @@ Features/
     Domain/
 ```
 
-Với Domain, có 2 hướng:
+For the Domain layer you have two options (and can combine them):
 
-- **Shared Domain**: gom domain dùng chung cho nhiều feature vào `Domain/` (centralized).
-- **Feature Domain**: mỗi feature tự định nghĩa domain riêng trong `Features/<Feature>/Domain`.
+- **Shared Domain** — cross-feature models/use cases stay in the top-level `Domain/`.
+- **Feature Domain** — feature-specific domain lives in `Features/<Feature>/Domain/`.
 
-Có thể kết hợp cả hai: domain dùng chung đặt ở `Domain/`, domain đặc thù đặt trong feature tương ứng.
-
-## Sơ đồ tổng quan (Mermaid)
-
-```mermaid
-flowchart LR
-  Presentation --> Domain
-  Data --> Domain
-  Data --> Foundation
-  Presentation --> Foundation
-```
-
-Giải thích:
-- `Foundation` là core service dùng chung (logging, analytics, networking core, etc).
-- `Domain` là trung tâm: model, usecase, protocol.
-- `Data` là implement cụ thể (network, db, mapper).
-- `Presentation` là UI + navigation.
-- `App` là nơi lắp ghép dependency.
-
-## Core Packages
-
-Ba package core:
-
-- `Router`: quản lý navigation (SwiftUI `NavigationStack`), route/destination, và luồng điều hướng.
-- `RESTKit`: xử lý networking cơ bản (request builder, client, response handling).
-- `Logger`: logging thống nhất cho app (levels, outputs).
-
-Lý do tách 3 package:
-
-- Dễ tái sử dụng giữa nhiều dự án.
-- Chuẩn bị cho modularization về sau (có thể tách thành module/target riêng nếu cần).
-- Giảm coupling giữa phần core và phần feature.
-
-Mỗi package có README riêng. Khi cần cách dùng chi tiết, xem tại:
-
-- [Router README](../iOSAppTemplate/Foundation/Navigation/Router/README.md)
-- [RESTKit README](../iOSAppTemplate/Foundation/Networking/RESTKit/README.md)
-- [Logger README](../iOSAppTemplate/Foundation/Logging/Logger/README.md)
+When build times or merge conflicts start to hurt, extract features into their own SPM modules — the dependency rule above makes this a mechanical refactor.

@@ -1,88 +1,71 @@
 # Folder Structure
 
-## Root
+Every folder maps to a layer from [ARCHITECTURE.md](ARCHITECTURE.md). Empty skeleton folders keep a `README.md` describing their purpose (these are excluded from the build target, so they cost nothing) — replace them with real files as you build.
 
-- `App/`: Composition root, nơi lắp DI, coordinator, app bootstrap.
-- `Config/`: cấu hình theo môi trường (Dev/Staging/Prod).
-- `Resources/`: assets, fonts, docs, videos. Hỗ trợ đa ngôn ngữ qua `Localizable.strings`.
-- `Foundation/`: core services dùng chung toàn app.
-- `Domain/`: business logic thuần.
-- `Data/`: hạ tầng triển khai (network/db/repository).
-- `Presentation/`: UI, navigation, views.
+## Top level
+
+| Folder | Purpose |
+|---|---|
+| `App/` | Composition root: `@main` entry point, `AppDelegate`, and the `AppContainer` DI container. |
+| `Config/` | Per-environment `.xcconfig` files: `Dev/`, `Staging/`, `Prod/`. |
+| `Domain/` | Pure business logic. No framework dependencies. |
+| `Data/` | Concrete implementations of Domain protocols (network/database/repository). |
+| `Presentation/` | SwiftUI UI layer. |
+| `Foundation/` | Shared, stateless helpers and extensions. |
+| `Resources/` | Assets, fonts, localized strings, and media. |
 
 ## App
 
-Đặt coordinator, DI, entry point.
+The composition root — the only place that knows about concrete types.
 
-Ví dụ:
-- `App/Coordinator/AppCoordinator.swift`
-- `App/DI/AppContainer.swift`
-
-## Foundation
-
-Core services dùng chung (có thể là local SPM hoặc code nội bộ).
-
-Ví dụ:
-- `Foundation/Networking/RESTKit`
-- `Foundation/Logging/Logger`
-- `Foundation/Navigation/Router`
-- `Foundation/Analytics`
-- `Foundation/Monitoring`
-- `Foundation/Storage` (UserDefaults, Keychain)
-- `Foundation/Database/Realm` (chỉ khi dự án dùng Realm và chấp nhận coupling vào Realm)
-- `Foundation/Extensions`:
-  Các extension dùng chung cho Swift/SwiftUI/Foundation, ví dụ `String+Ext`, `Array+Ext`, `Date+Ext`, `View+Ext`, `Color+Ext`. Chỉ nên chứa extension mang tính tái sử dụng rộng, không chứa logic business.
-- `Foundation/Helpers`:
-  Các helper/utility thuần (stateless) phục vụ nhiều nơi: formatters, validators, builders nhỏ, convenience wrappers. Tránh nhét business logic vào đây.
+- `App/iOSAppTemplateApp.swift` — the `@main` `App`.
+- `App/AppDelegate.swift` — UIKit lifecycle hooks (push notifications, etc.).
+- `App/AppContainer.swift` — builds and holds the dependency graph.
 
 ## Domain
 
-Tầng trung tâm, thuần business.
+The center of the architecture — pure business logic.
 
-- `Domain/Models`
-- `Domain/UseCases`
-- `Domain/RepositoryProtocols`
+- `Domain/Models/` — domain entities (plain `struct`s, no framework types).
+- `Domain/UseCases/` — application business rules (interactors).
+- `Domain/RepositoryProtocols/` — interfaces the Data layer implements.
 
 ## Data
 
-Implement các protocol của Domain.
+Implements the Domain protocols.
 
-- `Data/Network`: DTO, API client, adapters.
-- `Data/Database` hoặc `Data/Local/Realm`: Realm entity/mapping.
-- `Data/Repositories`: Repository implementations.
-- `Data/Mappers`: chuyển DTO/Entity -> Domain model.
+- `Data/Network/` — API services and DTOs, built on **RESTKit**.
+- `Data/Database/` — local persistence implementations.
+- `Data/Repositories/` — repository implementations.
+- `Data/Mappers/` — convert DTOs/entities ↔ Domain models.
 
 ## Presentation
 
-UI layer: repo này dùng **SwiftUI** làm UI framework. Presentation chứa toàn bộ view, navigation và các thành phần UI tái sử dụng.
+The SwiftUI UI layer.
 
-- `Presentation/Screens`  
-  Mỗi screen chính của app (flow-level). Ví dụ `LoginScreen`, `HomeScreen`, `ProfileScreen`.
+| Folder | Purpose |
+|---|---|
+| `Screens/` | Flow-level screens (`LoginScreen`, `HomeScreen`, …). |
+| `UIComponents/` | Reusable, app-agnostic components (`PrimaryButton`, `EmptyStateView`, …). |
+| `Views/` | Reusable composite views. |
+| `Theme/` | Design tokens: colors, typography, spacing, shadows, animation constants. |
+| `Modifiers/` | Shared SwiftUI view modifiers (`.cardStyle()`, `.screenBackground()`). |
+| `Navigation/` | Route/destination enums and the **NaviStack** ↔ SwiftUI wiring (`NavigationStack`, `navigationDestination`, sheet/cover bindings). |
+| `Sheets/` `Covers/` `Popups/` `Alerts/` | Modal/overlay presentations by type. |
+| `Extensions/` | Presentation-only SwiftUI extensions. |
 
-- `Presentation/UIComponents`  
-  Các view nhỏ tái sử dụng: `PrimaryButton`, `InputField`, `EmptyStateView`, `BadgeView`, v.v.
+## Foundation
 
-- `Presentation/Navigation`  
-  Các route/destination enum, coordinator/navigator, navigation helpers. Nếu dùng Router package, thì phần **gắn Router vào SwiftUI** (NavigationStack, navigationDestination, sheet/cover, environmentObject) đặt ở đây.
+Shared, app-wide code that isn't business logic.
 
-- `Presentation/Theme`  
-  Typography, colors, spacing, shadows, gradients, animation constants, UI tokens.
+- `Foundation/Extensions/` — broadly reusable Swift/SwiftUI/Foundation extensions (`String+`, `Date+`, `View+`, `Color+`). No business logic.
+- `Foundation/Helpers/` — stateless utilities: formatters, validators, small builders.
 
-- `Presentation/Modifiers`  
-  SwiftUI modifiers dùng chung như `.primaryButtonStyle()`, `.cardStyle()`, `.screenBackground()`.
+> Cross-project, reusable services live in their own SPM packages instead (see [RESTKit](https://github.com/konotori/RESTKit), [NaviStack](https://github.com/konotori/NaviStack), [LogPipe](https://github.com/konotori/LogPipe)). `Foundation/` is for code that's shared *within this app* but not worth a package.
 
-- `Presentation/Sheets`  
-  Các sheet view (presented modally).
+## Resources
 
-- `Presentation/Covers`  
-  Các full screen cover view.
-
-- `Presentation/Popups`  
-  Popup/overlay views tái sử dụng.
-
-- `Presentation/Alerts`  
-  Alert views/config/alert models.
-
-## Lưu ý về folder rỗng
-
-Một số folder trống có `Placeholder.swift` để Xcode hiển thị group đúng cấu trúc. Khi thêm file thật, có thể xóa các placeholder này.
+- `Resources/Assets.xcassets` — images, colors, app icon.
+- `Resources/Fonts/` — custom fonts (remember to register them in `Info.plist`).
+- `Resources/Documents/`, `GIFs/`, `Videos/` — bundled media.
+- Localized strings (`Localizable.strings` / string catalogs) live here too.

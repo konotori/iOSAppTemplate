@@ -1,36 +1,54 @@
 # Conventions
 
+Conventions keep the codebase predictable so anyone can find and place code quickly. They are also enforced (where possible) by SwiftLint/SwiftFormat — see [TOOLING.md](TOOLING.md).
+
 ## Naming
 
-- DTO: `SomethingDTO`
-- Entity (Realm): `SomethingEntity`
-- Mapper: `SomethingMapper`
-- Repository protocol: `SomethingRepository`
-- Repository impl: `SomethingRepositoryImpl`
-- UseCase: `SomethingUseCase`
-- Screen: `SomethingScreen`
-- ViewModel (nếu dùng): `SomethingViewModel`
+| Kind | Pattern | Example |
+|---|---|---|
+| DTO | `…DTO` | `UserResponseDTO` |
+| Database entity | `…Entity` | `UserEntity` |
+| Mapper | `…Mapper` | `UserMapper` |
+| Repository protocol | `…Repository` | `UserRepository` |
+| Repository impl | `…RepositoryImpl` | `UserRepositoryImpl` |
+| Use case | `…UseCase` | `FetchProfileUseCase` |
+| Screen | `…Screen` | `ProfileScreen` |
+| View model (if used) | `…ViewModel` | `ProfileViewModel` |
 
 ## File placement
 
-- Models/UseCases/Protocols: `Domain/`
-- DTO/Entity/Mapper/Repository impl: `Data/`
-- UI/Screens/Navigation: `Presentation/`
-- Logging/Analytics/Router/RESTKit/Keychain: `Foundation/`
+| Code | Folder |
+|---|---|
+| Models, use cases, repository protocols | `Domain/` |
+| DTOs, entities, mappers, repository impls, API services | `Data/` |
+| Screens, components, navigation, theme | `Presentation/` |
+| Shared extensions & stateless helpers | `Foundation/` |
 
 ## Dependency rule
 
-- `Domain` không import từ `Data` hoặc `Presentation`.
-- `Data` có thể import `Domain`.
-- `Presentation` chỉ import `Domain` + `Foundation`.
-- `App` là nơi wire dependency, không đặt business logic.
+- `Domain` imports **nothing** from `Data` or `Presentation`.
+- `Data` may import `Domain`.
+- `Presentation` imports only `Domain` and `Foundation`.
+- `App` wires dependencies and holds **no business logic**.
 
 ## Error handling
 
-- UseCase trả `Result` hoặc throw.
-- Repository nên map lỗi network/db về dạng domain-friendly.
+- Use cases return `Result` or `throw`.
+- Repositories map network/database errors into domain-friendly errors — the UI should never see a raw `URLError` or DB error.
+- Treat task cancellation (`CancellationError`) separately from real failures; don't show error UI for it.
 
-## Config & Env
+## Logging
 
-- Các cấu hình theo môi trường đặt ở `Config/`.
-- Các constants liên quan env nên đặt ở `Config`.
+- Use **[LogPipe](https://github.com/konotori/LogPipe)** via a single shared logger (e.g. `Log.shared`), with per-module child loggers (`Log.network`, `Log.ui`).
+- Never commit `print(…)` / `debugPrint(…)` — the SwiftLint rule `no_direct_standard_out_logs` blocks it.
+
+## Configuration & environments
+
+- Environment-specific values live in `Config/<Env>/<Env>.xcconfig` (`BUNDLE_ID`, `APP_NAME`, base URLs, feature flags).
+- Reference them from code via generated build settings or `Info.plist` substitutions — don't hardcode environment values in Swift.
+
+## Code style (enforced)
+
+- **Tabs** for indentation, width 4, 120-column guideline (`.editorconfig` + `.swiftformat`).
+- File headers are stripped by SwiftFormat; don't add `// Created by …` blocks.
+- `@unchecked Sendable`, `#file`/`#filePath`, and `@objcMembers` are disallowed by custom SwiftLint rules — prefer the safe alternatives the rule messages suggest.

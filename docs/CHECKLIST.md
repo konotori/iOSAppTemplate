@@ -1,25 +1,37 @@
 # Feature Checklist
 
-## Khi thêm feature mới
+Follow the dependency order — Domain first, App last. See [SAMPLE_FEATURE.md](SAMPLE_FEATURE.md) for a worked example.
 
-1. Thêm model (nếu cần) ở `Domain/Models`.
-2. Tạo protocol repository ở `Domain/RepositoryProtocols`.
-3. Tạo use case ở `Domain/UseCases`.
-4. Tạo DTO/API/Entity ở `Data/Network` hoặc `Data/Database`.
-5. Tạo mapper ở `Data/Mappers`.
-6. Tạo repository impl ở `Data/Repositories`.
-7. Tạo màn hình ở `Presentation/Screens`.
-8. Wire dependency ở `App/DI` hoặc `App/Coordinator`.
+## Adding a feature
 
-## Khi thêm service chung (shared)
+1. **Domain** — add the model in `Domain/Models/` (if needed).
+2. **Domain** — define the repository protocol in `Domain/RepositoryProtocols/`.
+3. **Domain** — add the use case in `Domain/UseCases/`.
+4. **Data** — add DTOs and the API service (RESTKit `Endpoint`) in `Data/Network/`, or a database entity in `Data/Database/`.
+5. **Data** — add the mapper in `Data/Mappers/` (DTO/entity → Domain model).
+6. **Data** — implement the repository in `Data/Repositories/`.
+7. **Presentation** — build the screen in `Presentation/Screens/` and any reusable parts in `UIComponents/`.
+8. **Presentation** — add navigation (route enum + NaviStack wiring) in `Presentation/Navigation/`.
+9. **App** — wire the dependency graph in `App/AppContainer.swift`.
+10. **Test** — unit-test the use case against a stub repository.
 
-1. Tạo service ở `Foundation/`.
-2. Nếu là package local, thêm `Package.swift` và khai báo dependency.
-3. Wire ở `App/DI`.
+## Adding a shared service
 
-## Khi thêm constants
+1. Decide the scope:
+   - reusable **across projects** → a separate SPM package (like RESTKit/NaviStack/LogPipe);
+   - shared **within this app only** → `Foundation/`.
+2. Wire it in `App/AppContainer.swift`.
 
-- App/Config constants: `Config/`
-- UI constants: `Presentation/Theme` hoặc `Presentation/Constants`
-- Shared constants: `Foundation/Constants`
+## Where do constants go?
 
+| Constant type | Location |
+|---|---|
+| Environment / config (URLs, keys per env) | `Config/<Env>/<Env>.xcconfig` |
+| UI (colors, spacing, typography) | `Presentation/Theme/` |
+| Shared, non-UI | `Foundation/` |
+
+## Before you commit
+
+- Run `make fix` (format + auto-fix).
+- The pre-commit hooks will block on remaining SwiftLint violations and oversized assets.
+- For the full CI gate, run `make verify`.
