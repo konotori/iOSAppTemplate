@@ -1,0 +1,12 @@
+//
+//  Stagging.xcconfig
+//  iOSAppTemplate
+//
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+// App Configuration
+BUNDLE_ID = com.konotori.iosapptemplate.staging
+APP_NAME = iOSAppTemplate-Staging

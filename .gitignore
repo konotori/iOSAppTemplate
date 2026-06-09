@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.pbxuser
+xcuserdata/
+*.xcuserstate
+
+# SwiftPM
+.swiftpm/
+.build/
+Package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# App artifacts
+*.ipa
+*.dSYM.zip
+*.xcarchive
+
+# Playground
+timeline.xctimeline
+playground.xcworkspace
+
+# Misc
+*.log
+*.zip
