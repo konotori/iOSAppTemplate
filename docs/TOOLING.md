@@ -130,11 +130,11 @@ The compiler then warns whenever a function body or an expression's type-checkin
 
 ## Adding CI
 
-The template ships no CI by design. The natural entry point is a single job that runs:
+The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`. It mirrors the local gate:
 
 ```bash
 make verify     # swiftformat --lint + swiftlint --strict
 xcodebuild test # your unit tests
 ```
 
-Pin the same Mint versions on CI and cache `mint bootstrap` keyed on `Mintfile`'s hash.
+The workflow caches `mint bootstrap` keyed on `Mintfile`'s hash, so CI uses the same pinned tool versions as everyone else. If you scaffolded with `make new-app`, update the `PROJECT` / `SCHEME` env vars at the top of the workflow (the rename script doesn't touch CI YAML) and pick a runner image whose Xcode matches the project.

@@ -1,0 +1,58 @@
+# GitHub Actions CI — EXAMPLE (not active).
+#
+# The template ships no live CI by design, to stay provider-agnostic. To enable
+# it on GitHub: rename this file to `ci.yml`. If you scaffolded with
+# `make new-app`, update PROJECT/SCHEME below to your renamed project.
+#
+# It mirrors the local gate: `make verify` (SwiftFormat --lint + SwiftLint
+# --strict) then the unit tests. See docs/TOOLING.md → "Adding CI".
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # Use a runner whose Xcode matches the project (Swift 6 / iOS 18+; pick a
+    # macOS 26 image if you adopt iOS 26 APIs such as Liquid Glass).
+    runs-on: macos-15
+    env:
+      PROJECT: iOSAppTemplate.xcodeproj
+      SCHEME: iOSAppTemplate-Dev
+      DESTINATION: 'platform=iOS Simulator,name=iPhone 16'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pin Xcode explicitly for reproducible builds (adjust to the image).
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.2.app
+
+      # Cache the compiled, pinned SwiftLint/SwiftFormat binaries, keyed on the Mintfile.
+      - name: Cache Mint
+        uses: actions/cache@v4
+        with:
+          path: ~/.mint
+          key: mint-${{ runner.os }}-${{ hashFiles('Mintfile') }}
+
+      - name: Install pinned tools (Mint)
+        run: |
+          brew install mint
+          mint bootstrap
+
+      - name: Lint + format check
+        run: make verify
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            CODE_SIGNING_ALLOWED=NO
