@@ -11,7 +11,7 @@ Use the GitHub **"Use this template"** button (or clone/download the repo). You'
 ### 2. Install the toolchain (once per machine)
 
 ```bash
-bash scripts/bootstrap.sh
+make bootstrap
 ```
 
 Installs Mint + the pinned SwiftLint/SwiftFormat versions, installs `pre-commit`, and registers the git hook.

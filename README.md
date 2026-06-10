@@ -12,7 +12,7 @@ Clone it, run **two commands**, and start building — every new app starts from
 > 🍽️ **Worked example:** [Recipe Box](https://github.com/konotori/RecipeBox) — a complete TheMealDB browser built from this template (SwiftData favourites, NaviStack routing, Liquid Glass, multi-environment, 33 tests).
 
 ```bash
-bash scripts/bootstrap.sh          # install tools (Mint, SwiftLint, SwiftFormat, pre-commit)
+make bootstrap                     # install tools (Mint, SwiftLint, SwiftFormat, pre-commit)
 # edit .env → NEW_PROJECT_NAME / NEW_BUNDLE_ID
 make new-app                       # rename the whole project + verify it builds
 ```
@@ -59,7 +59,7 @@ make new-app                       # rename the whole project + verify it builds
 ### 1. Install the toolchain (once per machine)
 
 ```bash
-bash scripts/bootstrap.sh
+make bootstrap
 ```
 
 Installs [Mint](https://github.com/yonaskolb/Mint), the pinned SwiftLint/SwiftFormat versions (from `Mintfile`), and `pre-commit` (and installs the git hook).
