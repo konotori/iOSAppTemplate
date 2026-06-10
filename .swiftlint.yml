@@ -61,12 +61,6 @@ identifier_name:
 
 # Custom rules
 custom_rules:
-  prefer_untyped_literal_for_primitives:
-    name: "Prefer Untyped Literal"
-    regex: '\b(let|var)\s+\w+(\s*:\s*(String|Int|Float|Double|Bool)\s*=\s*(".*?"|\d+(\.\d*)?|true|false)|\s*=\s*(String|Int|Float|Double|Bool)(\.init)?\s*\(\s*[^:]*?\s*\)|\s*=\s*\.init\s*\(\s*[^:]*?\s*\))'
-    message: "Typed literals (e.g., let a: Int = 1, let b = String(\"x\"), let c: Bool = true) slow down compile time. Prefer untyped literals (let a = 1)."
-    severity: error
-
   avoid_bare_init_in_initializers:
     name: "Avoid Bare Init in Nested Context"
     regex: '(?<!super)(?<!Self)(?<!\w)\.init\s*\('
