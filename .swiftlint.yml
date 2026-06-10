@@ -1,3 +1,9 @@
+# Never lint build artifacts or resolved dependencies (mirrors .swiftformat).
+excluded:
+  - .build
+  - DerivedData
+  - Build
+
 # Disable rules
 disabled_rules:
   - type_body_length
@@ -20,6 +26,7 @@ type_name:
   excluded:
     - "^iPad.*"
     - "^iPhone.*"
+    - "^iOS.*"
 identifier_name:
   excluded: [vc, id]
 
