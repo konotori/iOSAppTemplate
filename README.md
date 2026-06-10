@@ -9,6 +9,8 @@
 
 Clone it, run **two commands**, and start building — every new app starts from the same opinionated, consistent foundation.
 
+> 🍽️ **Worked example:** [Recipe Box](https://github.com/konotori/RecipeBox) — a complete TheMealDB browser built from this template (SwiftData favourites, NaviStack routing, Liquid Glass, multi-environment, 33 tests).
+
 ```bash
 bash scripts/bootstrap.sh          # install tools (Mint, SwiftLint, SwiftFormat, pre-commit)
 # edit .env → NEW_PROJECT_NAME / NEW_BUNDLE_ID
@@ -39,6 +41,7 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
+| **CI** | GitHub Actions starter (`.github/workflows/ci.yml.example`) mirroring `make verify` + the test run |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
 | **Testing** | Unit test target ready to extend |
 
