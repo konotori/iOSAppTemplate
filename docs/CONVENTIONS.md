@@ -46,6 +46,19 @@ Conventions keep the codebase predictable so anyone can find and place code quic
 
 - Environment-specific values live in `Config/<Env>/<Env>.xcconfig` (`BUNDLE_ID`, `APP_NAME`, base URLs, feature flags).
 - Reference them from code via generated build settings or `Info.plist` substitutions — don't hardcode environment values in Swift.
+- **Compile-time environment branching.** Each `.xcconfig` sets `SWIFT_ACTIVE_COMPILATION_CONDITIONS` to `DEV` / `STAGING` / `PROD`. Combined with the project-level `"DEBUG $(inherited)"`, this lets you branch per environment — not just by build type:
+
+  ```swift
+  #if DEV
+      let baseURL = "https://dev.api.example.com"
+  #elseif STAGING
+      let baseURL = "https://staging.api.example.com"
+  #else
+      let baseURL = "https://api.example.com"
+  #endif
+  ```
+
+  Prefer this over `#if DEBUG`, which is `true` for **both** Dev and Staging (both are Debug configs) and so can't tell them apart. Resolve the active environment once (e.g. a small `AppEnvironment` enum) instead of scattering `#if` blocks.
 
 ## Code style (enforced)
 

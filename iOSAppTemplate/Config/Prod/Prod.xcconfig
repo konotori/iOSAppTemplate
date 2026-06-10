@@ -10,3 +10,7 @@
 // App Configuration
 BUNDLE_ID = com.konotori.iosapptemplate.prod
 APP_NAME = iOSAppTemplate
+
+// Compile-time environment flag (see Dev.xcconfig). Enables `#if PROD` (and
+// the `#else` branch, since release builds have no DEBUG).
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = PROD

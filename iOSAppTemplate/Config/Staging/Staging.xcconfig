@@ -10,3 +10,6 @@
 // App Configuration
 BUNDLE_ID = com.konotori.iosapptemplate.staging
 APP_NAME = iOSAppTemplate-Staging
+
+// Compile-time environment flag (see Dev.xcconfig). Enables `#if STAGING`.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = STAGING
