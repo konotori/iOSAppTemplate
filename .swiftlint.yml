@@ -39,7 +39,6 @@ opt_in_rules:
   # Modern Swift
   - toggle_bool
   - legacy_random
-  - shorthand_optional_binding
 
 # Modified rules
 cyclomatic_complexity:
