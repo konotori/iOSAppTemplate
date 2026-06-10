@@ -6,7 +6,6 @@ excluded:
 
 # Disable rules
 disabled_rules:
-  - type_body_length
   # --- Style rules: delegated entirely to SwiftFormat (avoid overlap/conflict) ---
   - trailing_whitespace
   - trailing_newline
@@ -19,9 +18,40 @@ disabled_rules:
   - vertical_whitespace
   - mark
 
+# Opt-in rules: semantic / safety / performance checks SwiftFormat doesn't cover.
+opt_in_rules:
+  # Performance — avoid redundant traversals
+  - first_where
+  - last_where
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - flatmap_over_map_reduce
+  - reduce_into
+  # Safety
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - fatal_error_message
+  - weak_delegate
+  - discouraged_optional_boolean
+  # Modern Swift
+  - toggle_bool
+  - legacy_random
+  - shorthand_optional_binding
+
 # Modified rules
 cyclomatic_complexity:
   ignores_case_statements: true
+force_unwrapping:
+  severity: warning
+implicitly_unwrapped_optional:
+  mode: all_except_iboutlets
+  severity: warning
+function_body_length:
+  warning: 100
+  error: 200
+type_body_length:
+  warning: 400
+  error: 600
 type_name:
   excluded:
     - "^iPad.*"
