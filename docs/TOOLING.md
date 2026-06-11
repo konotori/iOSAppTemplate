@@ -77,7 +77,7 @@ Because SwiftFormat auto-fixes both (and `swiftformat --lint` flags them in CI),
 |---|---|---|
 | **While coding** | Xcode build phase → `scripts/run-swiftlint-incremental.sh` | Lints only changed Swift files; warnings are click-to-navigate in Xcode; **never fails the build** (`\|\| true`). |
 | **On commit** | `pre-commit` | SwiftFormat auto-fixes; SwiftLint `--strict` blocks; image-size guard. |
-| **CI / on demand** | `make verify` | Read-only: `swiftformat --lint` + `swiftlint --strict`. |
+| **CI / on demand** | `make verify` (or `make verify-github`) | Read-only: `swiftformat --lint` + `swiftlint --strict`. `verify-github` adds `--reporter github-actions-logging` so SwiftLint warnings show up as inline PR annotations. |
 
 Strict enforcement lives at commit time and in CI; the build phase is fast feedback only.
 
@@ -130,11 +130,32 @@ The compiler then warns whenever a function body or an expression's type-checkin
 
 ## Adding CI
 
-The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`. It mirrors the local gate:
+The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`.
 
-```bash
-make verify     # swiftformat --lint + swiftlint --strict
-xcodebuild test # your unit tests
-```
+The starter runs **two jobs in parallel**, mirroring the local gate (`make verify` + the test run) split for speed:
 
-The workflow caches `mint bootstrap` keyed on `Mintfile`'s hash, so CI uses the same pinned tool versions as everyone else. If you scaffolded with `make new-app`, update the `PROJECT` / `SCHEME` env vars at the top of the workflow (the rename script doesn't touch CI YAML) and pick a runner image whose Xcode matches the project.
+| Job | Runs | Why separate |
+|---|---|---|
+| **lint** | `make verify-github` (SwiftFormat `--lint` + SwiftLint `--strict` with inline annotations) | No Xcode/simulator needed, so it returns in seconds and surfaces lint issues on the PR without waiting for a build. |
+| **test** | `xcodebuild test` on the `-Dev` scheme, piped through `xcbeautify` | Builds the app and runs the unit tests; uploads the `.xcresult` bundle as an artifact. |
+
+What the starter does for you:
+
+- **Pinned tools, cached.** Both the Mint tool cache (keyed on `Mintfile`) and the resolved SPM checkouts (keyed on `Package.resolved`) are cached, so CI uses the same pinned versions as everyone else and skips re-resolving packages on every run.
+- **Latest stable Xcode.** `maxim-lobanov/setup-xcode@v1` with `xcode-version: latest-stable` floats to the newest released Xcode on the runner image. Pin an explicit version (e.g. `'16.2'`) in that step if you need byte-reproducible builds.
+- **Debuggable failures.** `-resultBundlePath TestResults.xcresult` is uploaded on every run, and `xcodebuild.log` is uploaded on failure — open the `.xcresult` in Xcode to inspect failing tests instead of scrolling raw logs. (We deliberately *don't* try to parse Swift Testing failures out of the bundle in CI — uploading the artifact is simpler and more reliable.)
+- **Fast, safe scheduling.** `concurrency` cancels superseded runs on the same ref, and `timeout-minutes: 30` caps a hung test job.
+
+> ⚠️ **`Package.resolved` must be committed.** The SPM cache key hashes it, and reproducible app builds depend on it. The template's `.gitignore` no longer ignores it — make sure it's tracked (`git add iOSAppTemplate.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
+
+If you scaffolded with `make new-app`, update the `PROJECT` / `SCHEME` env vars **and the `Package.resolved` path in the SPM cache key** to your renamed project (the rename script doesn't touch CI YAML). Pick a runner image whose Xcode matches the project — use a macOS 26 image if you adopt iOS 26 APIs such as Liquid Glass.
+
+### Scaling up in production
+
+The starter is tuned for a small-to-medium app. As the project grows, the commented **"Production tuning"** block at the bottom of the workflow sketches the common next steps:
+
+- **Parallel tests** — once the suite is large, shard it across simulator clones with `-parallel-testing-enabled YES -parallel-testing-worker-count N` (Swift Testing already parallelizes in-process; this adds cross-process sharding). Raise `timeout-minutes` to match the longer wall-clock budget.
+- **Simulator / OS matrix** — run the `test` job under a `strategy.matrix` of destinations to catch version-specific breakage.
+- **Code coverage** — add `-enableCodeCoverage YES`, then parse and upload (or gate on) the report.
+- **Release smoke build** — a build-only job on the `-Prod` scheme catches config-gated breakage the Dev tests miss.
+- **Branch protection** — mark `lint` and `test` as required status checks so PRs can't merge red.

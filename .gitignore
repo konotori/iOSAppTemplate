@@ -11,7 +11,7 @@ xcuserdata/
 # SwiftPM
 .swiftpm/
 .build/
-Package.resolved
+# Package.resolved is intentionally committed for reproducible builds in app projects
 
 # CocoaPods
 Pods/

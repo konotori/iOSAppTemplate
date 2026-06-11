@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 MINT := mint run
 
-.PHONY: bootstrap new-app fix verify lint lint-strict lint-fix format-run format-check format-dry versions help
+.PHONY: bootstrap new-app fix verify verify-github lint lint-strict lint-github lint-fix format-run format-check format-dry versions help
 
 bootstrap: ## Install Mint + tools (Mintfile) + pre-commit hooks
 	@bash scripts/bootstrap.sh
@@ -13,11 +13,16 @@ fix: format-run lint-fix ## Format + auto-fix lint (run before committing)
 
 verify: format-check lint-strict ## Full CI gate (read-only, does not modify files)
 
+verify-github: format-check lint-github ## CI gate for GitHub Actions (inline PR annotations)
+
 lint: ## SwiftLint — warnings only
 	@$(MINT) swiftlint lint
 
 lint-strict: ## SwiftLint --strict — fail on any warning
 	@$(MINT) swiftlint lint --strict
+
+lint-github: ## SwiftLint --strict with GitHub Actions inline annotations
+	@$(MINT) swiftlint lint --strict --reporter github-actions-logging
 
 lint-fix: ## SwiftLint auto-correct fixable rules
 	@$(MINT) swiftlint lint --fix

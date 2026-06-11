@@ -25,6 +25,7 @@ make new-app                       # rename the whole project + verify it builds
 - [Project Structure](#project-structure)
 - [Bundled Packages](#bundled-packages)
 - [Tooling](#tooling)
+- [Continuous Integration](#continuous-integration)
 - [`make` Command Reference](#make-command-reference)
 - [Documentation](#documentation)
 - [License](#license)
@@ -41,7 +42,7 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
-| **CI** | GitHub Actions starter (`.github/workflows/ci.yml.example`) mirroring `make verify` + the test run |
+| **CI** | GitHub Actions starter (`.github/workflows/ci.yml.example`) — parallel lint + test jobs, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
 | **Testing** | Unit test target ready to extend |
 
@@ -146,6 +147,28 @@ Code quality is enforced by **SwiftFormat** (style, auto-fixed) and **SwiftLint*
 
 Full details — version bumps, the SwiftFormat/SwiftLint split, the image-size guard, `.editorconfig`, and the compile-time warning flags — are in **[docs/TOOLING.md](docs/TOOLING.md)**.
 
+## Continuous Integration
+
+The template ships **no live CI** (to stay provider-agnostic) but includes a battle-tested GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Rename it to `ci.yml` to enable it on GitHub.
+
+It splits the local gate into **two jobs that run in parallel**:
+
+| Job | What it does |
+|---|---|
+| **lint** | `make verify-github` — SwiftFormat `--lint` + SwiftLint `--strict`. No Xcode, so it returns in seconds and posts inline PR annotations. |
+| **test** | Builds the `-Dev` scheme and runs the unit tests via `xcodebuild`, piped through `xcbeautify`, then uploads the `.xcresult` bundle. |
+
+Out of the box it gives you:
+
+- **Cached, pinned tooling** — the Mint binaries (keyed on `Mintfile`) and resolved SPM checkouts (keyed on `Package.resolved`) are cached, so runs reuse the exact versions everyone else uses and skip re-resolving packages.
+- **Latest stable Xcode** — via `maxim-lobanov/setup-xcode@v1` (`latest-stable`); swap in an explicit version for byte-reproducible builds.
+- **Debuggable failures** — `TestResults.xcresult` is uploaded on every run and `xcodebuild.log` on failure; open the bundle in Xcode to inspect failing tests.
+- **Sensible scheduling** — `concurrency` cancels superseded runs and `timeout-minutes: 30` caps a hung job.
+
+> ⚠️ **`Package.resolved` is committed** (the `.gitignore` no longer ignores it) — the SPM cache key and reproducible builds depend on it. If you scaffolded with `make new-app`, update `PROJECT` / `SCHEME` and the `Package.resolved` path in the cache key (the rename script doesn't touch CI YAML).
+
+A commented **"Production tuning"** block at the bottom of the workflow covers the next steps as the project grows — parallel test sharding, a simulator/OS matrix, code coverage, a Release smoke build, and required status checks. Full walkthrough in **[docs/TOOLING.md → Adding CI](docs/TOOLING.md#adding-ci)**.
+
 ## `make` Command Reference
 
 ```
@@ -153,6 +176,7 @@ make bootstrap     Install Mint + tools + pre-commit hooks
 make new-app       Scaffold a new app from .env (rename + verify build)
 make fix           Format + auto-fix lint (run before committing)
 make verify        Full read-only gate for CI (format check + strict lint)
+make verify-github Same gate, with inline GitHub Actions PR annotations
 make lint          SwiftLint (warnings only)
 make lint-strict   SwiftLint --strict (fails on any warning)
 make format-run    SwiftFormat (format all files)
