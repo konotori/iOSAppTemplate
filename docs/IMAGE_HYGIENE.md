@@ -60,6 +60,23 @@ hygiene scripts themselves change, so `hygiene.yml` is path-filtered to them.
 - The weekly `duplicate-backstop` still catches anything that lands on the
   default branch outside a PR (e.g. a direct push).
 
+### The self-test — testing the tools themselves
+
+`self-test` (`scripts/test_image_hygiene.py`) does **not** scan your project — it
+checks that the two tools *themselves* still work. Think of it as the tools'
+unit tests: it builds a throwaway fixture project covering every case below
+(with known expected answers), runs both tools against it, and asserts the
+reports match. It never touches your real assets.
+
+Why it exists: the tools are code, and a future edit could silently break them.
+For example, changing the duplicate detector to compare file bytes instead of
+pixels would quietly stop catching re-compressed copies — leaving a green but
+*blind* gate. The self-test catches that: a known case would fail and turn CI
+red before the change merges.
+
+It runs only when the hygiene scripts change (path-filtered) plus weekly (to
+catch behaviour drift from a new Pillow/FengNiao version), so it's nearly free.
+
 ---
 
 # Tool 1 — Duplicate images
