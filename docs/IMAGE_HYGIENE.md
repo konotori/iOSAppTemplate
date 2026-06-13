@@ -36,29 +36,52 @@ to activate — see "Adopting" below.)
 
 | Check | Workflow / job | Runs | Behaviour |
 | --- | --- | --- | --- |
-| Duplicate **gate** | `ci.yml` → `duplicate-images` | every PR | fails on duplicates the PR introduces |
-| Duplicate **backstop** | `hygiene.yml` → `duplicate-backstop` | weekly | advisory whole-project report |
+| Duplicate gate (PR) | `ci.yml` → `duplicate-images` | every PR | fails on duplicates the PR **introduces** (incremental) |
+| Duplicate gate (main) | `ci.yml` → `duplicate-images` | push to `main` | fails on **any** duplicate (whole-project) |
 | Unused | `hygiene.yml` → `unused` | weekly | advisory report (`unused.md`) |
 | Self-test | `hygiene.yml` → `self-test` | weekly + when the scripts change | fails if a tool regresses |
 
-Why this split: duplicates are precise and most useful *at introduction* → a PR
-gate, living in the normal PR CI (`ci.yml`) next to lint/test. Unused is fuzzy
-and best done in batches → weekly only. The self-test only needs to run when the
-hygiene scripts themselves change, so `hygiene.yml` is path-filtered to them.
+Why this split: duplicates are precise and most useful *at introduction* → a gate
+in the normal CI (`ci.yml`) next to lint/test. Unused is fuzzy and best done in
+batches → weekly only. The self-test only needs to run when the hygiene scripts
+change, so `hygiene.yml` is path-filtered to them.
 
-### The PR duplicate gate
+### The duplicate gate — two modes
 
-- It fails a PR **only for duplicates that PR introduces** — it diffs the PR
-  against its base and gates on changed files, so a pre-existing duplicate
-  elsewhere never blocks an unrelated PR.
-- If the PR changes no image files, the job exits early (nothing to scan).
-- Because the detector is exact-match (essentially zero false positives),
-  failing is safe.
-- It's a **soft** gate: keep it out of *required* status checks so a red result
-  is an informative warning a maintainer can still merge past. Intentional
-  duplicates are rare; resolve them, or merge with maintainer discretion.
-- The weekly `duplicate-backstop` still catches anything that lands on the
-  default branch outside a PR (e.g. a direct push).
+The same `duplicate-images` job behaves differently per event:
+
+**On a pull request — incremental.** It diffs the PR against its base and fails
+only on duplicates the PR *introduces*; a pre-existing duplicate never blocks an
+unrelated PR, and if the PR changes no image files the job exits early. This is
+robust against rapid pushes — the diff is always against the PR's *fixed* base,
+so a cancelled-and-rerun job still re-checks the whole PR.
+
+**On a push to `main` — whole-project.** It scans every image and fails on
+**any** duplicate. This is the real backstop: it catches what a per-PR diff
+structurally cannot see —
+
+- two PRs that each add a copy of the same image (neither PR's own diff sees the
+  other's addition, so both PR gates pass — but together they're a duplicate), and
+- anything pushed **directly to `main`**, bypassing PRs.
+
+Why whole-project and not an incremental `before…after` diff on main: a push diff
+window moves with every push, so with `cancel-in-progress` concurrency a
+cancelled run's range would be skipped permanently. A whole-project scan has no
+range dependency — every run re-scans the current tip, so a cancelled run never
+permanently misses anything (the duplicate stays caught on the next push).
+
+> ⚠️ **Keep `main` duplicate-free.** The main-push mode fails on *any* duplicate,
+> so run the tool once and clean existing duplicates before enabling it —
+> otherwise every push to `main` stays red until you do.
+
+**Soft gate.** The detector is exact-match (essentially zero false positives), so
+failing is safe. Keep this check **out of required status checks**: a push to
+`main` has already merged, so a red result is an informative "go fix it" signal,
+not a block. Intentional duplicates are rare — resolve them, or merge with
+maintainer discretion.
+
+There is **no weekly duplicate scan** — the main-push mode already scans the
+whole project in real time, so a weekly pass would be redundant.
 
 ### The self-test — testing the tools themselves
 

@@ -114,23 +114,25 @@ jobs:
           path: SourcePackages
           key: spm-${{ runner.os }}-${{ hashFiles('iOSAppTemplate.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
 
-  # Job 3: soft gate against NEWLY-introduced duplicate images. No Xcode needed,
-  # so it runs on a cheap Ubuntu runner in parallel. It fails ONLY on duplicates
-  # this PR adds (pre-existing ones never block unrelated PRs). The weekly
-  # whole-project backstop and the unused-image scan live in
-  # hygiene.yml.example. See docs/IMAGE_HYGIENE.md. After `make new-app`, update
-  # the scanned path (`iOSAppTemplate`) to your renamed app folder.
-  #
-  # Soft gate: leave this OUT of required status checks so a red result is an
-  # informative warning a maintainer can still merge past.
+  # Job 3: duplicate-image gate. No Xcode needed, so it runs on a cheap Ubuntu
+  # runner in parallel. After `make new-app`, update the scanned path
+  # (`iOSAppTemplate`) to your renamed app folder.
+  #   - On a PR: incremental — fails ONLY on duplicates the PR introduces (diffs
+  #     against the PR base; pre-existing duplicates never block an unrelated PR).
+  #   - On push to main: whole-project — fails on ANY duplicate. This catches
+  #     what a per-PR diff can't see — two PRs that each add the same image, or a
+  #     direct push. Clean any existing duplicates once before relying on it
+  #     (whole-project is robust under concurrency: every run re-scans the
+  #     current tip, so a cancelled run never permanently misses anything).
+  # See docs/IMAGE_HYGIENE.md. Leave this OUT of *required* status checks so a
+  # red result is an informative warning a maintainer can still merge past.
   duplicate-images:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
-          fetch-depth: 0 # needed to diff the PR against its base
+          fetch-depth: 0 # needed to diff a PR against its base
 
       - uses: actions/setup-python@v5
         with:
@@ -138,18 +140,25 @@ jobs:
 
       - run: pip install Pillow
 
-      - name: Check for newly-introduced duplicate images
+      - name: Check for duplicate images
         shell: bash
         run: |
           set -o pipefail
-          git diff --diff-filter=AMR --name-only \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.event.pull_request.head.sha }}" > changed.txt || true
-          if grep -qiE '\.(png|jpg|jpeg|webp|bmp|tiff|tif|pdf|svg|heic|gif)$' changed.txt; then
-            python scripts/find_duplicate_images.py iOSAppTemplate --root . \
-              --changed-list changed.txt --fail-on-found | tee duplicates.md
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Incremental: gate only on duplicates this PR introduces.
+            git diff --diff-filter=AMR --name-only \
+              "${{ github.event.pull_request.base.sha }}" \
+              "${{ github.event.pull_request.head.sha }}" > changed.txt || true
+            if grep -qiE '\.(png|jpg|jpeg|webp|bmp|tiff|tif|pdf|svg|heic|gif)$' changed.txt; then
+              python scripts/find_duplicate_images.py iOSAppTemplate --root . \
+                --changed-list changed.txt --fail-on-found | tee duplicates.md
+            else
+              echo "No image files changed; skipping duplicate scan." | tee duplicates.md
+            fi
           else
-            echo "No image files changed; skipping duplicate scan." | tee duplicates.md
+            # Push to main: whole-project, fail on ANY duplicate.
+            python scripts/find_duplicate_images.py iOSAppTemplate --root . \
+              --fail-on-found | tee duplicates.md
           fi
 
       - uses: actions/upload-artifact@v4

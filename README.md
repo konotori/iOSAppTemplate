@@ -42,7 +42,7 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
-| **CI** | GitHub Actions starters — `ci.yml.example` (parallel lint + test + duplicate-image PR gate, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts) and `hygiene.yml.example` (weekly unused-image + duplicate scans) |
+| **CI** | GitHub Actions starters — `ci.yml.example` (parallel lint + test + duplicate-image gate, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts) and `hygiene.yml.example` (weekly unused-image scan) |
 | **Image hygiene** | Report duplicate / unused images (`scripts/find_*_images.py`) + a pre-commit oversized-asset guard — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
 | **Testing** | Unit test target ready to extend |
@@ -158,9 +158,9 @@ The template ships **no live CI** (to stay provider-agnostic) but includes battl
 |---|---|
 | **lint** | `make verify-github` — SwiftFormat `--lint` + SwiftLint `--strict`. No Xcode, so it returns in seconds and posts inline PR annotations. |
 | **test** | Builds the `-Dev` scheme and runs the unit tests via `xcodebuild`, piped through `xcbeautify`, then uploads the `.xcresult` bundle. |
-| **duplicate-images** | Soft gate that fails a PR only on duplicate images it *introduces* (cheap Ubuntu runner, no Xcode). |
+| **duplicate-images** | Soft gate (cheap Ubuntu runner, no Xcode): on a PR fails only on duplicate images it *introduces*; on a push to `main` fails on *any* duplicate (the whole-project backstop). |
 
-`hygiene.yml` runs **weekly** (advisory): an unused-image scan, a whole-project duplicate backstop, and a self-test that protects the tools. The split — precise per-PR gate vs fuzzy weekly batch — and exactly what each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)**.
+`hygiene.yml` runs **weekly**: an unused-image scan and a self-test that protects the tools. (Duplicates are handled entirely by the `ci.yml` gate above, so there's no weekly duplicate scan.) Exactly what each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)**.
 
 Out of the box it gives you:
 

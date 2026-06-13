@@ -1,19 +1,18 @@
 # GitHub Actions image-hygiene workflow — EXAMPLE (not active).
 #
 # To enable on GitHub: rename this file to `hygiene.yml`. After `make new-app`,
-# update the scanned path (`iOSAppTemplate`) in the `unused` and
-# `duplicate-backstop` jobs to your renamed app folder (the rename script does
-# not touch CI YAML).
+# update the scanned path (`iOSAppTemplate`) in the `unused` job to your renamed
+# app folder (the rename script does not touch CI YAML).
 #
-# This holds the WEEKLY image-hygiene work + a self-test that protects the tools.
-# The per-PR duplicate gate lives in ci.yml (next to lint/test). See
-# docs/IMAGE_HYGIENE.md for the full picture of which check runs where.
+# This holds the WEEKLY unused-image scan + a self-test that protects the tools.
+# Duplicate images are gated entirely in ci.yml (on every PR and every push to
+# main), so they are not scanned here. See docs/IMAGE_HYGIENE.md for the full
+# picture of which check runs where.
 #
 # Jobs:
 #   • self-test — builds fixtures for every case and asserts the reports; runs
 #     weekly and whenever the hygiene scripts change (path-filtered).
 #   • unused — weekly advisory scan for unreferenced images (FengNiao, macOS).
-#   • duplicate-backstop — weekly whole-project duplicate scan (advisory).
 #
 # Note: `schedule` only fires on the repository's default branch.
 
@@ -101,22 +100,6 @@ jobs:
           path: unused.md
           retention-days: 7
 
-  # Weekly advisory backstop: duplicates across the WHOLE project (the per-PR
-  # gate in ci.yml only sees each PR's own changes).
-  duplicate-backstop:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install Pillow
-      - name: Scan whole project for duplicate images
-        run: python scripts/find_duplicate_images.py iOSAppTemplate --root . | tee duplicates.md
-      - uses: actions/upload-artifact@v4
-        with:
-          name: duplicate-images-report
-          path: duplicates.md
-          retention-days: 7
+  # Note: there is no weekly duplicate scan. Duplicates are gated in ci.yml on
+  # every PR (incrementally) AND on every push to main (whole-project), so a
+  # separate weekly whole-project pass would be redundant.

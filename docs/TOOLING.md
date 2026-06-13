@@ -140,7 +140,7 @@ The starter runs **three jobs in parallel**, mirroring the local gate (`make ver
 | **test** | `xcodebuild test` on the `-Dev` scheme, piped through `xcbeautify` | Builds the app and runs the unit tests; uploads the `.xcresult` bundle as an artifact. |
 | **duplicate-images** | `scripts/find_duplicate_images.py` on the PR's changed images | Soft gate that fails only on duplicate images the PR *introduces*. Runs on a cheap Ubuntu runner (no Xcode). See [Image hygiene](IMAGE_HYGIENE.md). |
 
-A companion **`.github/workflows/hygiene.yml.example`** holds the weekly image-hygiene work (unused-image scan + whole-project duplicate backstop) and a self-test for the tools. The per-PR duplicate gate lives in `ci.yml` next to lint/test; the weekly batch work lives in `hygiene.yml`. Full details — including exactly what each check does and does **not** cover — are in **[docs/IMAGE_HYGIENE.md](IMAGE_HYGIENE.md)**.
+The duplicate gate lives in `ci.yml` next to lint/test: on a PR it fails only on duplicates the PR *introduces*, and on a push to `main` it fails on *any* duplicate (the whole-project backstop). A companion **`.github/workflows/hygiene.yml.example`** holds the weekly unused-image scan and a self-test for the tools. Full details — including exactly what each check does and does **not** cover — are in **[docs/IMAGE_HYGIENE.md](IMAGE_HYGIENE.md)**.
 
 What the starter does for you:
 
