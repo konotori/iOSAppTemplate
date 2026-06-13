@@ -1,0 +1,122 @@
+# GitHub Actions image-hygiene workflow — EXAMPLE (not active).
+#
+# To enable on GitHub: rename this file to `hygiene.yml`. After `make new-app`,
+# update the scanned path (`iOSAppTemplate`) in the `unused` and
+# `duplicate-backstop` jobs to your renamed app folder (the rename script does
+# not touch CI YAML).
+#
+# This holds the WEEKLY image-hygiene work + a self-test that protects the tools.
+# The per-PR duplicate gate lives in ci.yml (next to lint/test). See
+# docs/IMAGE_HYGIENE.md for the full picture of which check runs where.
+#
+# Jobs:
+#   • self-test — builds fixtures for every case and asserts the reports; runs
+#     weekly and whenever the hygiene scripts change (path-filtered).
+#   • unused — weekly advisory scan for unreferenced images (FengNiao, macOS).
+#   • duplicate-backstop — weekly whole-project duplicate scan (advisory).
+#
+# Note: `schedule` only fires on the repository's default branch.
+
+name: Image hygiene
+
+on:
+  schedule:
+    - cron: '0 1 * * 1' # Mondays 01:00 UTC (~08:00 Asia/Ho_Chi_Minh)
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/find_duplicate_images.py'
+      - 'scripts/find_unused_images.py'
+      - 'scripts/test_image_hygiene.py'
+      - 'scripts/image-allowlist.txt'
+      - '.github/workflows/hygiene.yml'
+  pull_request:
+    paths:
+      - 'scripts/find_duplicate_images.py'
+      - 'scripts/find_unused_images.py'
+      - 'scripts/test_image_hygiene.py'
+      - 'scripts/image-allowlist.txt'
+      - '.github/workflows/hygiene.yml'
+
+concurrency:
+  group: hygiene-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FENGNIAO_VERSION: '0.13.0'
+
+jobs:
+  # Protect the tools: build fixtures for every case and assert the reports.
+  self-test:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Cache Mint
+        uses: actions/cache@v5
+        with:
+          path: ~/.mint
+          key: mint-fengniao-${{ env.FENGNIAO_VERSION }}
+      - name: Install FengNiao
+        run: |
+          brew install mint
+          mint install onevcat/FengNiao@${{ env.FENGNIAO_VERSION }}
+      - name: Run self-test
+        run: FENGNIAO="$HOME/.mint/bin/fengniao" python scripts/test_image_hygiene.py
+
+  # Weekly advisory scan: unused images (whole project, batch cleanup).
+  unused:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Cache Mint
+        uses: actions/cache@v5
+        with:
+          path: ~/.mint
+          key: mint-fengniao-${{ env.FENGNIAO_VERSION }}
+      - name: Install FengNiao
+        run: |
+          brew install mint
+          mint install onevcat/FengNiao@${{ env.FENGNIAO_VERSION }}
+      - name: Scan for unused images
+        run: |
+          FENGNIAO="$HOME/.mint/bin/fengniao" \
+            python scripts/find_unused_images.py iOSAppTemplate | tee unused.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unused-images-report
+          path: unused.md
+          retention-days: 7
+
+  # Weekly advisory backstop: duplicates across the WHOLE project (the per-PR
+  # gate in ci.yml only sees each PR's own changes).
+  duplicate-backstop:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install Pillow
+      - name: Scan whole project for duplicate images
+        run: python scripts/find_duplicate_images.py iOSAppTemplate --root . | tee duplicates.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: duplicate-images-report
+          path: duplicates.md
+          retention-days: 7

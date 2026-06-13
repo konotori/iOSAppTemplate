@@ -12,19 +12,22 @@ shopt -s nocasematch
 #     - icon   : AppIcon / *.appiconset / Icons folders
 #     - vector : pdf / svg — should be tiny; a large one usually means
 #                raster data was embedded into a vector by mistake
-#     - raster : png / jpg / jpeg / heic / webp — typical UI images
+#     - raster : png / jpg / jpeg / heic / webp / bmp / tiff — typical UI
+#                images (bmp/tiff are uncompressed and prone to being huge)
 #     - gif    : animated GIFs can be legitimately large, but prefer
 #                Lottie / video / APNG for animations
+#
+#   Keep this format list in sync with scripts/find_duplicate_images.py.
 # ============================================================
 
 # --- Size budgets (bytes) ---
 MAX_ICON_SIZE=$((100 * 1024))       # 100 KB — app icons
 MAX_VECTOR_SIZE=$((100 * 1024))     # 100 KB — pdf / svg (vectors should be small)
-MAX_RASTER_SIZE=$((1024 * 1024))    # 1 MB   — png / jpg / jpeg / heic / webp
+MAX_RASTER_SIZE=$((1024 * 1024))    # 1 MB   — png / jpg / jpeg / heic / webp / bmp / tiff
 MAX_GIF_SIZE=$((3 * 1024 * 1024))   # 3 MB   — animated gif
 
 # --- Extensions treated as images / vectors (case-insensitive) ---
-EXT_REGEX='\.(png|jpg|jpeg|heic|gif|webp|pdf|svg)$'
+EXT_REGEX='\.(png|jpg|jpeg|heic|gif|webp|pdf|svg|bmp|tiff|tif)$'
 
 violations=()
 has_gif_violation=false

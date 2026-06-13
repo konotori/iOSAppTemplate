@@ -132,12 +132,15 @@ The compiler then warns whenever a function body or an expression's type-checkin
 
 The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`.
 
-The starter runs **two jobs in parallel**, mirroring the local gate (`make verify` + the test run) split for speed:
+The starter runs **three jobs in parallel**, mirroring the local gate (`make verify` + the test run) split for speed:
 
 | Job | Runs | Why separate |
 |---|---|---|
 | **lint** | `make verify-github` (SwiftFormat `--lint` + SwiftLint `--strict` with inline annotations) | No Xcode/simulator needed, so it returns in seconds and surfaces lint issues on the PR without waiting for a build. |
 | **test** | `xcodebuild test` on the `-Dev` scheme, piped through `xcbeautify` | Builds the app and runs the unit tests; uploads the `.xcresult` bundle as an artifact. |
+| **duplicate-images** | `scripts/find_duplicate_images.py` on the PR's changed images | Soft gate that fails only on duplicate images the PR *introduces*. Runs on a cheap Ubuntu runner (no Xcode). See [Image hygiene](IMAGE_HYGIENE.md). |
+
+A companion **`.github/workflows/hygiene.yml.example`** holds the weekly image-hygiene work (unused-image scan + whole-project duplicate backstop) and a self-test for the tools. The per-PR duplicate gate lives in `ci.yml` next to lint/test; the weekly batch work lives in `hygiene.yml`. Full details — including exactly what each check does and does **not** cover — are in **[docs/IMAGE_HYGIENE.md](IMAGE_HYGIENE.md)**.
 
 What the starter does for you:
 
