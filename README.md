@@ -42,7 +42,8 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
-| **CI** | GitHub Actions starter (`.github/workflows/ci.yml.example`) — parallel lint + test jobs, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts |
+| **CI** | GitHub Actions starters — `ci.yml.example` (parallel lint + test + duplicate-image gate, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts) and `hygiene.yml.example` (weekly unused-image scan) |
+| **Image hygiene** | Report duplicate / unused images (`scripts/find_*_images.py`) + a pre-commit oversized-asset guard — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
 | **Testing** | Unit test target ready to extend |
 
@@ -149,14 +150,26 @@ Full details — version bumps, the SwiftFormat/SwiftLint split, the image-size 
 
 ## Continuous Integration
 
-The template ships **no live CI** (to stay provider-agnostic) but includes a battle-tested GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Rename it to `ci.yml` to enable it on GitHub.
+The template ships **no live CI** (to stay provider-agnostic) but includes battle-tested GitHub Actions starters at **`.github/workflows/ci.yml.example`** and **`.github/workflows/hygiene.yml.example`**. Rename them to `*.yml` to enable on GitHub.
 
-It splits the local gate into **two jobs that run in parallel**:
+CI is organised as **layered gates** — each check runs at the moment that fits its speed, scope, and noise. The reasoning behind the structure is in **[docs/CI.md](docs/CI.md)**:
+
+| Layer | Runs | Checks |
+|---|---|---|
+| pre-commit | every commit | SwiftFormat · SwiftLint · image-size guard |
+| PR — `ci.yml` | every push / PR | lint · test · duplicate-image gate |
+| push to `main` — `ci.yml` | merge / direct push | duplicate-image (whole-project) |
+| weekly — `hygiene.yml` | schedule | unused-image scan · tool self-test |
+
+**`ci.yml` jobs** (run in parallel):
 
 | Job | What it does |
 |---|---|
 | **lint** | `make verify-github` — SwiftFormat `--lint` + SwiftLint `--strict`. No Xcode, so it returns in seconds and posts inline PR annotations. |
 | **test** | Builds the `-Dev` scheme and runs the unit tests via `xcodebuild`, piped through `xcbeautify`, then uploads the `.xcresult` bundle. |
+| **duplicate-images** | Soft gate (cheap Ubuntu runner, no Xcode): on a PR fails only on duplicate images it *introduces*; on a push to `main` fails on *any* duplicate (the whole-project backstop). |
+
+`hygiene.yml` runs **weekly**: an unused-image scan and a self-test that protects the tools. (Duplicates are handled entirely by the `ci.yml` gate above, so there's no weekly duplicate scan.) Exactly what each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)**.
 
 Out of the box it gives you:
 
@@ -193,6 +206,8 @@ make help          List all commands
 | [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md) | What each folder is for |
 | [CONVENTIONS.md](docs/CONVENTIONS.md) | Naming, file placement, error handling |
 | [TOOLING.md](docs/TOOLING.md) | Lint/format/Mint/pre-commit/build-phase/compile-flags setup |
+| [CI.md](docs/CI.md) | CI philosophy — layered gates, gate vs advisory, where a new check belongs |
+| [IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) | Duplicate / unused / oversized image checks — what each covers and the CI wiring |
 | [USAGE.md](docs/USAGE.md) | Day-to-day workflow and scaffolding details |
 | [SAMPLE_FEATURE.md](docs/SAMPLE_FEATURE.md) | An end-to-end feature across all layers |
 | [CHECKLIST.md](docs/CHECKLIST.md) | Step-by-step checklist for adding a feature |
