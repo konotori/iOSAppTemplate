@@ -130,7 +130,7 @@ The compiler then warns whenever a function body or an expression's type-checkin
 
 ## Adding CI
 
-The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`.
+The template ships **no live CI** by design (to stay provider-agnostic), but includes a ready GitHub Actions starter at **`.github/workflows/ci.yml.example`**. Enable it by renaming to `ci.yml`. For *why* CI is structured the way it is — layered gates, gate vs advisory, where a new check belongs — see **[CI.md](CI.md)**.
 
 The starter runs **three jobs in parallel**, mirroring the local gate (`make verify` + the test run) split for speed:
 

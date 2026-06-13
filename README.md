@@ -152,7 +152,16 @@ Full details — version bumps, the SwiftFormat/SwiftLint split, the image-size 
 
 The template ships **no live CI** (to stay provider-agnostic) but includes battle-tested GitHub Actions starters at **`.github/workflows/ci.yml.example`** and **`.github/workflows/hygiene.yml.example`**. Rename them to `*.yml` to enable on GitHub.
 
-`ci.yml` runs **three jobs in parallel** on every push/PR:
+CI is organised as **layered gates** — each check runs at the moment that fits its speed, scope, and noise. The reasoning behind the structure is in **[docs/CI.md](docs/CI.md)**:
+
+| Layer | Runs | Checks |
+|---|---|---|
+| pre-commit | every commit | SwiftFormat · SwiftLint · image-size guard |
+| PR — `ci.yml` | every push / PR | lint · test · duplicate-image gate |
+| push to `main` — `ci.yml` | merge / direct push | duplicate-image (whole-project) |
+| weekly — `hygiene.yml` | schedule | unused-image scan · tool self-test |
+
+**`ci.yml` jobs** (run in parallel):
 
 | Job | What it does |
 |---|---|
@@ -197,6 +206,7 @@ make help          List all commands
 | [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md) | What each folder is for |
 | [CONVENTIONS.md](docs/CONVENTIONS.md) | Naming, file placement, error handling |
 | [TOOLING.md](docs/TOOLING.md) | Lint/format/Mint/pre-commit/build-phase/compile-flags setup |
+| [CI.md](docs/CI.md) | CI philosophy — layered gates, gate vs advisory, where a new check belongs |
 | [IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) | Duplicate / unused / oversized image checks — what each covers and the CI wiring |
 | [USAGE.md](docs/USAGE.md) | Day-to-day workflow and scaffolding details |
 | [SAMPLE_FEATURE.md](docs/SAMPLE_FEATURE.md) | An end-to-end feature across all layers |
