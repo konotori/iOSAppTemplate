@@ -15,7 +15,7 @@ that fits its nature.
 | **pre-commit** | every commit (local) | fast, local, only the staged files | block | SwiftFormat, SwiftLint, image-size guard |
 | **PR** | every pull request | precise checks needed before merge | gate | lint, test, duplicate-image gate (incremental) |
 | **push to `main`** | merge / direct push | catch what a per-PR view can't see | gate | duplicate-image (whole-project) |
-| **scheduled (weekly)** | cron | whole-project, fuzzy, batch cleanup | advisory | unused images, tool self-test |
+| **scheduled (weekly)** | cron | whole-project, fuzzy, batch cleanup | advisory | unused images, dead Swift code, tool self-test |
 
 A check moves **earlier** (up the table) when it's cheap and precise — fast
 feedback, caught before it spreads. It moves **later** when it's slow, fuzzy, or
@@ -79,3 +79,5 @@ precise — never the other way around.
   starter jobs in detail.
 - [IMAGE_HYGIENE.md](IMAGE_HYGIENE.md) — the duplicate / unused / oversized image
   checks, and exactly what each does and does **not** cover.
+- [DEAD_CODE.md](DEAD_CODE.md) — the Periphery unused-Swift-code scan and the
+  false-positive rules in `.periphery.yml`.

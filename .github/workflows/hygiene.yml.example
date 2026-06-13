@@ -1,22 +1,24 @@
-# GitHub Actions image-hygiene workflow — EXAMPLE (not active).
+# GitHub Actions weekly-hygiene workflow — EXAMPLE (not active).
 #
 # To enable on GitHub: rename this file to `hygiene.yml`. After `make new-app`,
-# update the scanned path (`iOSAppTemplate`) in the `unused` job to your renamed
-# app folder (the rename script does not touch CI YAML).
+# update the scanned path (`iOSAppTemplate`) in the `unused` job, and the
+# `project`/`schemes` in `.periphery.yml`, to your renamed project (the rename
+# script does not touch CI YAML).
 #
-# This holds the WEEKLY unused-image scan + a self-test that protects the tools.
-# Duplicate images are gated entirely in ci.yml (on every PR and every push to
-# main), so they are not scanned here. See docs/IMAGE_HYGIENE.md for the full
-# picture of which check runs where.
+# This holds the WEEKLY advisory hygiene work + a self-test that protects the
+# image tools. Duplicate images are gated in ci.yml (on every PR and push to
+# main), so they are not scanned here. See docs/CI.md for the full picture of
+# which check runs where.
 #
 # Jobs:
 #   • self-test — builds fixtures for every case and asserts the reports; runs
-#     weekly and whenever the hygiene scripts change (path-filtered).
+#     weekly and whenever the image-hygiene scripts change (path-filtered).
 #   • unused — weekly advisory scan for unreferenced images (FengNiao, macOS).
+#   • dead-code — weekly advisory scan for unused Swift code (Periphery, macOS).
 #
 # Note: `schedule` only fires on the repository's default branch.
 
-name: Image hygiene
+name: Hygiene
 
 on:
   schedule:
@@ -46,6 +48,7 @@ permissions:
 
 env:
   FENGNIAO_VERSION: '0.13.0'
+  PERIPHERY_VERSION: '3.7.4'
 
 jobs:
   # Protect the tools: build fixtures for every case and assert the reports.
@@ -98,6 +101,34 @@ jobs:
         with:
           name: unused-images-report
           path: unused.md
+          retention-days: 7
+
+  # Weekly advisory: unused (dead) Swift code via Periphery. It builds + indexes
+  # the project (so it needs macOS/Xcode) and is inherently fuzzy — reflection,
+  # @objc, KVC etc. can't be resolved statically — so it is ADVISORY only, never
+  # a gate. `.periphery.yml` is tuned to suppress the common false positives;
+  # see docs/DEAD_CODE.md.
+  dead-code:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Install Periphery (pinned release binary)
+        run: |
+          curl -sSL -o /tmp/periphery.zip \
+            "https://github.com/peripheryapp/periphery/releases/download/${PERIPHERY_VERSION}/periphery-${PERIPHERY_VERSION}.zip"
+          mkdir -p /tmp/periphery && unzip -oq /tmp/periphery.zip -d /tmp/periphery
+      - name: Scan for unused code
+        run: /tmp/periphery/periphery scan --config .periphery.yml --format xcode | tee dead-code.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dead-code-report
+          path: dead-code.txt
           retention-days: 7
 
   # Note: there is no weekly duplicate scan. Duplicates are gated in ci.yml on

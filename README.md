@@ -159,7 +159,7 @@ CI is organised as **layered gates** — each check runs at the moment that fits
 | pre-commit | every commit | SwiftFormat · SwiftLint · image-size guard |
 | PR — `ci.yml` | every push / PR | lint · test · duplicate-image gate |
 | push to `main` — `ci.yml` | merge / direct push | duplicate-image (whole-project) |
-| weekly — `hygiene.yml` | schedule | unused-image scan · tool self-test |
+| weekly — `hygiene.yml` | schedule | unused-image scan · dead-code scan · tool self-test |
 
 **`ci.yml` jobs** (run in parallel):
 
@@ -169,7 +169,7 @@ CI is organised as **layered gates** — each check runs at the moment that fits
 | **test** | Builds the `-Dev` scheme and runs the unit tests via `xcodebuild`, piped through `xcbeautify`, then uploads the `.xcresult` bundle. |
 | **duplicate-images** | Soft gate (cheap Ubuntu runner, no Xcode): on a PR fails only on duplicate images it *introduces*; on a push to `main` fails on *any* duplicate (the whole-project backstop). |
 
-`hygiene.yml` runs **weekly**: an unused-image scan and a self-test that protects the tools. (Duplicates are handled entirely by the `ci.yml` gate above, so there's no weekly duplicate scan.) Exactly what each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)**.
+`hygiene.yml` runs **weekly** (advisory): an unused-image scan, a dead-Swift-code scan ([Periphery](https://github.com/peripheryapp/periphery), tuned in `.periphery.yml`), and a self-test that protects the image tools. (Duplicates are handled by the `ci.yml` gate above, so there's no weekly duplicate scan.) What each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)** and **[docs/DEAD_CODE.md](docs/DEAD_CODE.md)**.
 
 Out of the box it gives you:
 
@@ -208,6 +208,7 @@ make help          List all commands
 | [TOOLING.md](docs/TOOLING.md) | Lint/format/Mint/pre-commit/build-phase/compile-flags setup |
 | [CI.md](docs/CI.md) | CI philosophy — layered gates, gate vs advisory, where a new check belongs |
 | [IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) | Duplicate / unused / oversized image checks — what each covers and the CI wiring |
+| [DEAD_CODE.md](docs/DEAD_CODE.md) | Periphery unused-Swift-code scan — the false-positive rules and what needs manual `// periphery:ignore` |
 | [USAGE.md](docs/USAGE.md) | Day-to-day workflow and scaffolding details |
 | [SAMPLE_FEATURE.md](docs/SAMPLE_FEATURE.md) | An end-to-end feature across all layers |
 | [CHECKLIST.md](docs/CHECKLIST.md) | Step-by-step checklist for adding a feature |
