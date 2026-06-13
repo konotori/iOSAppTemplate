@@ -146,9 +146,11 @@ jobs:
           set -o pipefail
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # Incremental: gate only on duplicates this PR introduces.
+            # three-dot: diff against the merge-base, so only the PR's own
+            # changes count even if the base branch advanced meanwhile.
             git diff --diff-filter=AMR --name-only \
-              "${{ github.event.pull_request.base.sha }}" \
-              "${{ github.event.pull_request.head.sha }}" > changed.txt || true
+              "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" \
+              > changed.txt || true
             if grep -qiE '\.(png|jpg|jpeg|webp|bmp|tiff|tif|pdf|svg|heic|gif)$' changed.txt; then
               python scripts/find_duplicate_images.py iOSAppTemplate --root . \
                 --changed-list changed.txt --fail-on-found | tee duplicates.md
