@@ -1,8 +1,13 @@
 # CI philosophy
 
 How and **why** CI is structured in this template. This is the mindset; the
-concrete jobs and tools live in [TOOLING.md](TOOLING.md) (lint / test) and
-[IMAGE_HYGIENE.md](IMAGE_HYGIENE.md) (image checks).
+concrete jobs and tools live in [TOOLING.md](TOOLING.md) (lint / test),
+[IMAGE_HYGIENE.md](IMAGE_HYGIENE.md) (image checks), and
+[DEAD_CODE.md](DEAD_CODE.md) (dead Swift code).
+
+> **Scope.** This is about **continuous integration** — checks on every change.
+> Continuous *delivery* (code signing & distribution) is environment-specific and
+> intentionally out of scope.
 
 ## The idea: layered gates
 
