@@ -1,6 +1,6 @@
 # iOSAppTemplate
 
-**A production-ready iOS app template — Clean Architecture, SwiftUI, multi-environment, and a complete linting/formatting/scaffolding toolchain.**
+**A production-ready iOS app template — Clean Architecture, SwiftUI, multi-environment, a complete lint/format/scaffold toolchain, and built-in guidance + tooling for AI coding agents (AGENTS.md + MCP).**
 
 ![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?logo=swift&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2016%2B-blue?logo=apple)
