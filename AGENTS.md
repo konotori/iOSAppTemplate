@@ -35,6 +35,20 @@ make bootstrap     # installs Mint + pinned tools (Mintfile) + pre-commit hooks
 make help          # list every make target
 ```
 
+## MCP servers (hands & eyes)
+
+This repo ships [`.mcp.json`](.mcp.json) so a Claude Code agent gets two servers
+on first run (approve them when prompted):
+
+- **xcodebuild** ([XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP))
+  — build, test, run on a simulator, and take **screenshots** to verify UI
+  visually. Requires Node (`npx`).
+- **sosumi** (<https://sosumi.ai>) — search/fetch **current Apple documentation**;
+  use it instead of trusting training memory for SwiftUI / UIKit / Foundation APIs.
+
+`.mcp.json` is the Claude Code convention; other agents may need their own MCP
+setup, and non-Claude tools can simply ignore it.
+
 ## Schemes & configuration
 
 Three schemes, each driven by its own `.xcconfig` in `Config/<Env>/` (bundle id,
