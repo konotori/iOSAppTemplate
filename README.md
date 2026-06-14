@@ -46,6 +46,7 @@ make new-app                       # rename the whole project + verify it builds
 | **CD** | **Not included by design** — code signing & distribution (TestFlight, fastlane, …) are environment-specific, so they're left for you to add. |
 | **Hygiene** | Duplicate / unused images, an oversized-asset pre-commit guard, and unused Swift code (Periphery) — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) & [docs/DEAD_CODE.md](docs/DEAD_CODE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
+| **AI agents** | [`AGENTS.md`](AGENTS.md) — a tool-neutral guide read by Claude Code, Cursor, Copilot, Codex, … gives any agent the verify loop, conventions, and guardrails up front (a one-line `CLAUDE.md` bridges it for Claude Code; `make new-app` keeps it in sync) |
 | **Testing** | Unit test target ready to extend |
 
 ## Requirements
@@ -213,6 +214,7 @@ make help          List all commands
 
 | Doc | Contents |
 |---|---|
+| [AGENTS.md](AGENTS.md) | Entry point for AI coding agents — the verify loop, conventions, and guardrails (tool-neutral; bridged to Claude Code via `CLAUDE.md`) |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Clean Architecture, dependency rule, data flow, DI, modularization |
 | [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md) | What each folder is for |
 | [CONVENTIONS.md](docs/CONVENTIONS.md) | Naming, file placement, error handling |

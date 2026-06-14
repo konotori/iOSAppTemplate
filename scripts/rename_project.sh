@@ -287,6 +287,17 @@ if [[ -d "$CONFIG_ROOT" ]]; then
   update_xcconfig "$CONFIG_ROOT/Prod/Prod.xcconfig" "${NEW_BUNDLE_ID}.prod" "${NEW_NAME}"
 fi
 
+# Update AGENTS.md so the scheme names / project references in the commands an
+# AI agent runs stay correct after the rename (the script otherwise only touches
+# pbxproj, schemes, Swift, and xcconfig — not Markdown).
+AGENTS_FILE="$ROOT_DIR/AGENTS.md"
+if [[ -f "$AGENTS_FILE" ]]; then
+  sed -i '' \
+    -e "s/${OLD_MODULE}/${NEW_MODULE}/g" \
+    -e "s/${OLD_PROJECT_NAME}/${NEW_NAME}/g" \
+    "$AGENTS_FILE" 2>/dev/null || true
+fi
+
 # Rename root folder at the end (rename current root, not move into another root)
 NEW_ROOT="$PARENT_DIR/$NEW_NAME"
 if [[ "$ROOT_BASENAME" != "$NEW_NAME" ]]; then
