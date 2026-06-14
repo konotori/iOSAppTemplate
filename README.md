@@ -42,8 +42,9 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
-| **CI** | GitHub Actions starters — `ci.yml.example` (parallel lint + test + duplicate-image gate, Mint & SPM caching, `xcbeautify` annotations, `.xcresult` artifacts) and `hygiene.yml.example` (weekly unused-image scan) |
-| **Image hygiene** | Report duplicate / unused images (`scripts/find_*_images.py`) + a pre-commit oversized-asset guard — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) |
+| **CI** | GitHub Actions starters (rename `*.yml.example` to enable): `ci.yml` — lint · test · duplicate-image gate, with Mint & SPM caching; weekly `hygiene.yml` — unused images · dead code · self-test. Layered-gates rationale in [docs/CI.md](docs/CI.md). |
+| **CD** | **Not included by design** — code signing & distribution (TestFlight, fastlane, …) are environment-specific, so they're left for you to add. |
+| **Hygiene** | Duplicate / unused images, an oversized-asset pre-commit guard, and unused Swift code (Periphery) — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) & [docs/DEAD_CODE.md](docs/DEAD_CODE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
 | **Testing** | Unit test target ready to extend |
 
@@ -144,13 +145,15 @@ Code quality is enforced by **SwiftFormat** (style, auto-fixed) and **SwiftLint*
 |---|---|
 | **While coding** | Xcode build phase lints changed files → navigable warnings |
 | **On commit** | `pre-commit`: SwiftFormat auto-fixes, SwiftLint (strict) blocks, image-size guard |
-| **On demand / CI** | `make verify` |
+| **On demand / CI** | `make verify` (local) · `make verify-github` (CI — same gate with inline PR annotations) |
 
 Full details — version bumps, the SwiftFormat/SwiftLint split, the image-size guard, `.editorconfig`, and the compile-time warning flags — are in **[docs/TOOLING.md](docs/TOOLING.md)**.
 
 ## Continuous Integration
 
 The template ships **no live CI** (to stay provider-agnostic) but includes battle-tested GitHub Actions starters at **`.github/workflows/ci.yml.example`** and **`.github/workflows/hygiene.yml.example`**. Rename them to `*.yml` to enable on GitHub.
+
+> **CD is intentionally not set up.** Code signing, provisioning, and distribution (TestFlight / fastlane / Xcode Cloud) are environment-specific and credential-bound, so the template leaves them to you rather than ship something you'd have to rip out.
 
 CI is organised as **layered gates** — each check runs at the moment that fits its speed, scope, and noise. The reasoning behind the structure is in **[docs/CI.md](docs/CI.md)**:
 
@@ -159,7 +162,7 @@ CI is organised as **layered gates** — each check runs at the moment that fits
 | pre-commit | every commit | SwiftFormat · SwiftLint · image-size guard |
 | PR — `ci.yml` | every push / PR | lint · test · duplicate-image gate |
 | push to `main` — `ci.yml` | merge / direct push | duplicate-image (whole-project) |
-| weekly — `hygiene.yml` | schedule | unused-image scan · tool self-test |
+| weekly — `hygiene.yml` | schedule | unused-image scan · dead-code scan · tool self-test |
 
 **`ci.yml` jobs** (run in parallel):
 
@@ -169,7 +172,15 @@ CI is organised as **layered gates** — each check runs at the moment that fits
 | **test** | Builds the `-Dev` scheme and runs the unit tests via `xcodebuild`, piped through `xcbeautify`, then uploads the `.xcresult` bundle. |
 | **duplicate-images** | Soft gate (cheap Ubuntu runner, no Xcode): on a PR fails only on duplicate images it *introduces*; on a push to `main` fails on *any* duplicate (the whole-project backstop). |
 
-`hygiene.yml` runs **weekly**: an unused-image scan and a self-test that protects the tools. (Duplicates are handled entirely by the `ci.yml` gate above, so there's no weekly duplicate scan.) Exactly what each check does and does **not** cover is in **[docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md)**.
+**`hygiene.yml` jobs** (weekly, advisory — these never gate):
+
+| Job | What it does |
+|---|---|
+| **unused** | Unused-image scan (FengNiao). See [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md). |
+| **dead-code** | Unused Swift code ([Periphery](https://github.com/peripheryapp/periphery), tuned in `.periphery.yml`). See [docs/DEAD_CODE.md](docs/DEAD_CODE.md). |
+| **self-test** | Guards the image tools against regressions (runs on every change to them). |
+
+Duplicates are handled by the `ci.yml` gate above, so there is no weekly duplicate scan.
 
 Out of the box it gives you:
 
@@ -208,6 +219,7 @@ make help          List all commands
 | [TOOLING.md](docs/TOOLING.md) | Lint/format/Mint/pre-commit/build-phase/compile-flags setup |
 | [CI.md](docs/CI.md) | CI philosophy — layered gates, gate vs advisory, where a new check belongs |
 | [IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) | Duplicate / unused / oversized image checks — what each covers and the CI wiring |
+| [DEAD_CODE.md](docs/DEAD_CODE.md) | Periphery unused-Swift-code scan — the false-positive rules and what needs manual `// periphery:ignore` |
 | [USAGE.md](docs/USAGE.md) | Day-to-day workflow and scaffolding details |
 | [SAMPLE_FEATURE.md](docs/SAMPLE_FEATURE.md) | An end-to-end feature across all layers |
 | [CHECKLIST.md](docs/CHECKLIST.md) | Step-by-step checklist for adding a feature |
