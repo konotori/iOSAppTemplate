@@ -30,11 +30,14 @@ opt_in_rules:
   - contains_over_filter_is_empty
   - flatmap_over_map_reduce
   - reduce_into
+  - sorted_first_last
+  - contains_over_first_not_nil
   # Safety
   - force_unwrapping
   - implicitly_unwrapped_optional
   - fatal_error_message
   - weak_delegate
+  - unowned_variable_capture
   - discouraged_optional_boolean
   # Modern Swift
   - toggle_bool
