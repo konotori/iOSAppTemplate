@@ -164,8 +164,10 @@ def update_setting_for_target(data, target_name, key, value):
         data = data.replace(block, block_new)
     return data
 
-# Update app/test/uitest bundle ids without making them identical
-data = update_bundle_id_for_target(data, new_name, new_bundle_id)
+# Update app/test/uitest bundle ids without making them identical.
+# The app target reads its id from the per-env .xcconfig (BUNDLE_ID), so keep the
+# variable here — the .xcconfig values below give Dev/Staging/Prod distinct ids.
+data = update_bundle_id_for_target(data, new_name, "$(BUNDLE_ID)")
 data = update_bundle_id_for_target(data, f"{new_name}Tests", f"{new_bundle_id}.tests")
 data = update_bundle_id_for_target(data, f"{new_name}UITests", f"{new_bundle_id}.uitests")
 

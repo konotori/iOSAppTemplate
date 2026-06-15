@@ -10,7 +10,6 @@
 		1A5385402FD7CD90007216E4 /* RESTKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1A53853F2FD7CD90007216E4 /* RESTKit */; };
 		1A5385432FD7CDD2007216E4 /* NaviStack in Frameworks */ = {isa = PBXBuildFile; productRef = 1A5385422FD7CDD2007216E4 /* NaviStack */; };
 		1A5385462FD7CDE7007216E4 /* LogPipe in Frameworks */ = {isa = PBXBuildFile; productRef = 1A5385452FD7CDE7007216E4 /* LogPipe */; };
-		837B82442F32EA7D00814F02 /* RESTKit in Frameworks */ = {isa = PBXBuildFile; productRef = 837B82432F32EA7D00814F02 /* RESTKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,7 +89,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				837B82442F32EA7D00814F02 /* RESTKit in Frameworks */,
 				1A5385402FD7CD90007216E4 /* RESTKit in Frameworks */,
 				1A5385462FD7CDE7007216E4 /* LogPipe in Frameworks */,
 				1A5385432FD7CDD2007216E4 /* NaviStack in Frameworks */,
@@ -162,7 +160,6 @@
 			);
 			name = "iOSAppTemplate";
 			packageProductDependencies = (
-				837B82432F32EA7D00814F02 /* RESTKit */,
 				1A53853F2FD7CD90007216E4 /* RESTKit */,
 				1A5385422FD7CDD2007216E4 /* NaviStack */,
 				1A5385452FD7CDE7007216E4 /* LogPipe */,
@@ -661,7 +658,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.konotori.iosapptemplate";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -697,7 +694,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.konotori.iosapptemplate";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -802,7 +799,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.konotori.iosapptemplate";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -891,10 +888,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1A5385442FD7CDE7007216E4 /* XCRemoteSwiftPackageReference "LogPipe" */;
 			productName = LogPipe;
-		};
-		837B82432F32EA7D00814F02 /* RESTKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = RESTKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

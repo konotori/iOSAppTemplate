@@ -39,7 +39,7 @@
 --enable redundantAsync          # Remove unnecessary 'async'
 --enable redundantEquatable      # Remove unnecessary 'Equatable' conformance
 --enable redundantMemberwiseInit # Remove redundant memberwise initializers
---enable redundantProperty       # Remove unnecessary property declarations
+--enable redundantVariable       # Remove unnecessary property declarations
 --enable redundantPublic         # Remove unnecessary 'public' keyword
 --enable redundantReturn         # Remove unnecessary 'return'
 --enable redundantStaticSelf     # Remove unnecessary 'Self'
