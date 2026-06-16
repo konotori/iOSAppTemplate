@@ -42,7 +42,7 @@ make new-app                       # rename the whole project + verify it builds
 | **Logging** | [LogPipe](https://github.com/konotori/LogPipe) — structured, multi-destination logging pipeline |
 | **Code quality** | SwiftLint + SwiftFormat, version-pinned via **Mint**, wired into pre-commit, an Xcode build phase, and `make` |
 | **Compile health** | `-warn-long-function-bodies` / `-warn-long-expression-type-checking` flags surface slow-to-compile code (Dev only) |
-| **CI** | GitHub Actions starters (rename `*.yml.example` to enable): `ci.yml` — lint · test · duplicate-image gate, with Mint & SPM caching; weekly `hygiene.yml` — unused images · dead code · self-test. Layered-gates rationale in [docs/CI.md](docs/CI.md). |
+| **CI** | GitHub Actions starters (rename `*.yml.example` to enable):<br>• **`ci.yml`** — lint · test · duplicate-image gate, with Mint & SPM caching.<br>• **`hygiene.yml`** (weekly) — unused images · dead code · self-test.<br>Layered-gates rationale in [docs/CI.md](docs/CI.md). |
 | **CD** | **Not included by design** — code signing & distribution (TestFlight, fastlane, …) are environment-specific, so they're left for you to add. |
 | **Hygiene** | Duplicate / unused images, an oversized-asset pre-commit guard, and unused Swift code (Periphery) — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) & [docs/DEAD_CODE.md](docs/DEAD_CODE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
