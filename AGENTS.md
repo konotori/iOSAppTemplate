@@ -79,6 +79,12 @@ Full rules: [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md). The non-negotiables:
 - **Adding a file:** just create it in the right folder — the project uses
   Xcode **synchronized folder groups**, so new files are picked up
   automatically. **Do not hand-edit `iOSAppTemplate.xcodeproj`** to add files.
+- **Never edit `.pbxproj` / `.entitlements` / `.storyboard` / `.xib`** — they
+  corrupt easily and belong to the Xcode UI. Claude Code enforces this with a
+  `PreToolUse` hook ([`.claude/hooks/guard-protected-files.sh`](.claude/hooks/guard-protected-files.sh),
+  wired in [`.claude/settings.json`](.claude/settings.json)) that blocks the
+  edit before it happens. Other agents: honor the rule from this file. Humans
+  editing in Xcode are unaffected.
 
 ## Where things go
 
