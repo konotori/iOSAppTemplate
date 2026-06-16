@@ -46,7 +46,7 @@ make new-app                       # rename the whole project + verify it builds
 | **CD** | **Not included by design** — code signing & distribution (TestFlight, fastlane, …) are environment-specific, so they're left for you to add. |
 | **Hygiene** | Duplicate / unused images, an oversized-asset pre-commit guard, and unused Swift code (Periphery) — see [docs/IMAGE_HYGIENE.md](docs/IMAGE_HYGIENE.md) & [docs/DEAD_CODE.md](docs/DEAD_CODE.md) |
 | **Scaffolding** | `make new-app` renames the entire project (folders, target, schemes, bundle IDs, `@main` struct) from one config file |
-| **AI agents** | [`AGENTS.md`](AGENTS.md) — a tool-neutral guide read by Claude Code, Cursor, Copilot, Codex, … gives any agent the verify loop, conventions, and guardrails up front (a one-line `CLAUDE.md` bridges it for Claude Code; `make new-app` keeps it in sync). Ships [`.mcp.json`](.mcp.json) so a Claude Code agent gets build/test/run-sim + screenshots (XcodeBuildMCP) and live Apple-docs lookup (sosumi) out of the box. |
+| **AI agents** | [`AGENTS.md`](AGENTS.md) — a tool-neutral guide read by Claude Code, Cursor, Copilot, Codex, … gives any agent the verify loop, conventions, and guardrails up front (a one-line `CLAUDE.md` bridges it for Claude Code; `make new-app` keeps it in sync). Ships [`.mcp.json`](.mcp.json) so a Claude Code agent gets build/test/run-sim + screenshots (XcodeBuildMCP) and live Apple-docs lookup (sosumi) out of the box. A `PreToolUse` guard hook ([`.claude/`](.claude/)) hard-blocks agents from editing `.pbxproj`/`.entitlements`/`.storyboard`/`.xib` (Claude Code; other agents honor it via `AGENTS.md`) — humans editing in Xcode are unaffected. |
 | **Testing** | Unit test target ready to extend |
 
 ## Requirements
