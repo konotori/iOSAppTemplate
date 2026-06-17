@@ -3,7 +3,10 @@
     "xcodebuild": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "xcodebuildmcp@latest", "mcp"]
+      "args": ["-y", "xcodebuildmcp@latest", "mcp"],
+      "env": {
+        "XCODEBUILDMCP_ENABLED_WORKFLOWS": "coverage,debugging,device,macos,project-discovery,project-scaffolding,simulator,simulator-management,swift-package,ui-automation,utilities,xcode-ide"
+      }
     },
     "sosumi": {
       "type": "http",

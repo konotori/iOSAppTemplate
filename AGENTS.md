@@ -42,7 +42,10 @@ on first run (approve them when prompted):
 
 - **xcodebuild** ([XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP))
   — build, test, run on a simulator, and take **screenshots** to verify UI
-  visually. Requires Node (`npx`).
+  visually. Requires Node (`npx`). `.mcp.json` enables the full workflow set
+  (device, debugging, swift-package, ui-automation, xcode-ide, …); the
+  `xcode-ide` tools (`RenderPreview`, live diagnostics, Swift REPL) only work
+  with **Xcode open**.
 - **sosumi** (<https://sosumi.ai>) — search/fetch **current Apple documentation**;
   use it instead of trusting training memory for SwiftUI / UIKit / Foundation APIs.
 
